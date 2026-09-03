@@ -1,0 +1,23 @@
+import matplotlib.pyplot as plt
+
+def X(n, x0, r):
+    Datos = [x0]
+        
+    for _ in range(n):
+        siguiente = r * (Datos[-1] * (1 - Datos[-1]))
+        Datos.append(siguiente)
+    return Datos
+
+r = 1
+n = 1000
+x0 = [0.45, 0.5, 0.55]
+
+Historial = {}
+
+for i in x0:
+    Historial[i] = X(n, i, r)
+    
+plt.figure(figsize=(12, 6))
+for i, valores in Historial.items():
+    eje_x = list(range(len(valores)))
+    plt.scatter(eje_x, valores, s=2)
