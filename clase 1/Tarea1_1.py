@@ -20,4 +20,12 @@ for i in x0:
 plt.figure(figsize=(12, 6))
 for i, valores in Historial.items():
     eje_x = list(range(len(valores)))
-    plt.scatter(eje_x, valores, s=2)
+    plt.scatter(eje_x, valores, s=2, label=f"x_0 = {i}")
+    
+plt.title("Comparación del Mapa Logístico para diferentes x0", fontsize=14)
+plt.xlabel("Número de Iteración (n)", fontsize=12)
+plt.ylabel("Valor de X", fontsize=12)
+plt.grid(True, linestyle='--', alpha = 0.5)
+plt.legend()
+
+plt.show()
