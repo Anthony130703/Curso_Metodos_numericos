@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 #parametros a utilizar
 a = 2.0
 N = 100
-z_inicial = 0
+z_inicial = 0.0
 eje_x = []
 eje_y = []
 max_interaciones = 100

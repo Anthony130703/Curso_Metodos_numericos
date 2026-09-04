@@ -6,9 +6,9 @@ r = 1.0
 n = 3000
 Historial = {}
 while r <= 4.0:
-    r_limpio = round(r, 1)
+    r_limpio = round(r, 2)
     Historial[r_limpio] = X(n, x0, r_limpio)
-    r += 0.1
+    r += 0.01
     
 plt.figure(figsize=(12, 6))
 
