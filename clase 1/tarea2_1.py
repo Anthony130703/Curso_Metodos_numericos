@@ -36,15 +36,16 @@ for x in eje_x:
     for y in eje_y:
         c = complex(x, y)
         z_actual = z_inicial
-        pertenece_al_conjunto = True
+        iteracion = 0
         
-        for interaciones in range(max_interaciones):
+        # El bucle continúa mientras no alcancemos el máximo de iteraciones
+        # Y mientras la magnitud de z_actual no supere 2
+        while iteracion < max_interaciones and abs(z_actual) <= 2:
             z_actual = Z(z_actual, c)
-            if abs(z_actual) > 2:
-                pertenece_al_conjunto = False
-                break
-        
-        if pertenece_al_conjunto:
+            iteracion += 1
+            
+        # Si al terminar el bucle z no escapó (su magnitud es <= 2), pertenece al conjunto
+        if abs(z_actual) <= 2:
             malla_puntos["validos"]["x"].append(x)
             malla_puntos["validos"]["y"].append(y)
         else:
@@ -58,4 +59,3 @@ plt.title("Visualización del Conjunto de Mandelbrot")
 plt.xlabel("Parte Real (x)")
 plt.ylabel("Parte Imaginaria (y)")
 plt.show()
-            

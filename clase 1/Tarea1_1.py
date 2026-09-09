@@ -1,12 +1,5 @@
 import matplotlib.pyplot as plt
-
-def X(n, x0, r):
-    Datos = [x0]
-        
-    for i in range(n):
-        siguiente = r * (Datos[-1] * (1 - Datos[-1]))
-        Datos.append(siguiente)
-    return Datos
+from modelos import X
 
 r = 1
 n = 1000
@@ -25,6 +18,7 @@ for i, valores in Historial.items():
 plt.title("Comparación del Mapa Logístico para diferentes x0", fontsize=14)
 plt.xlabel("Número de Iteración (n)", fontsize=12)
 plt.ylabel("Valor de X", fontsize=12)
+plt.yscale("log")
 plt.grid(True, linestyle='--', alpha = 0.5)
 plt.legend()
 
