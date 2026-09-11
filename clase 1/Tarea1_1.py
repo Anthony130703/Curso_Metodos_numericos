@@ -21,5 +21,4 @@ plt.ylabel("Valor de X", fontsize=12)
 plt.yscale("log")
 plt.grid(True, linestyle='--', alpha = 0.5)
 plt.legend()
-
-plt.show()
+plt.show
