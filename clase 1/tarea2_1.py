@@ -44,7 +44,7 @@ for x in eje_x:
             z_actual = Z(z_actual, c)
             iteracion += 1
             
-        # Si al terminar el bucle z no escapó (su magnitud es <= 2), pertenece al conjunto
+        # Si al terminar el bucle z su magnitud es <= 2, pertenece al conjunto
         if abs(z_actual) <= 2:
             malla_puntos["validos"]["x"].append(x)
             malla_puntos["validos"]["y"].append(y)
