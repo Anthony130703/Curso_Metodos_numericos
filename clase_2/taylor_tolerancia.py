@@ -30,7 +30,3 @@ while error >= tolerancia:
         
 print("\n--- CONCLUSIÓN ---")
 print(f"El bucle computacional se detuvo en n = {n}")
-    
-        
-
-
