@@ -14,3 +14,4 @@ raiz, errores, interaciones = biseccion(f, x_lower, x_upper, tolerancia)
 print(f"Raíz encontrada (x): {raiz}")
 if errores:
     print(f"Error final alcanzado: {errores[-1]}")
+print(f"El numero de iteraciones: {interaciones}")
