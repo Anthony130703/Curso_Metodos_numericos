@@ -1,3 +1,5 @@
+import numpy as np
+
 #Formula para el mapa logisitico
 def X(n, x0, r):
     Datos = [x0]
@@ -18,7 +20,7 @@ def factorial(n: int) -> int:
 #Metodo de la biseccion
 def biseccion(funcion, xl:float, xu:float, tolerancia, max_iter = 100):
     #Para verificar si los puntos escogidos estan bien
-    if funcion(xl) * funcion(xu) < 0:
+    if funcion(xl) * funcion(xu) > 0:
         print("Error: El intervalo inicial no garantiza una raíz.")
         return None, None, None
 
@@ -29,4 +31,26 @@ def biseccion(funcion, xl:float, xu:float, tolerancia, max_iter = 100):
     errores_historial = []
 
     while ea > tolerancia and iteracion < max_iter:
-        xr = np
+        #calculando el punto medio del intervalo
+        xr = (xl + xu)/2.0
+        
+        #Obteniendo el error relativo
+        if iteracion > 0:
+            ea = np.abs((xr - xr_old)/xr)
+            errores_historial.append(ea)
+        
+        #determinando en que lado del intervalo se encuentra la raiz
+        test = funcion(xl) * funcion(xr)
+        
+        if test < 0:
+            xu = xr
+        elif test > 0:
+            xl = xr
+        else: 
+            ea = 0.0
+            
+        xr_old = xr
+        iteracion += 1
+    
+    return xr, errores_historial, iteracion
+        
