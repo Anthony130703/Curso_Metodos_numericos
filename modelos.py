@@ -131,7 +131,8 @@ def newtonRaphson(funcion, Dfuncion , x0:float , tolerancia ,max_iter = 100):
         #Guardando el primer punto para luego medir el error
         xr_old = xr 
         df = Dfuncion(xr_old)
-
+        
+        #Verificando que la derivada no sea 0 para evitar errores
         if df == 0:
             print("Error: La derivada es cero. El método ha colapsado.")
             return None, None, None  #Abortamos sin usar break
@@ -147,3 +148,35 @@ def newtonRaphson(funcion, Dfuncion , x0:float , tolerancia ,max_iter = 100):
         iteracion += 1
 
     return xr, errores_historial, iteracion
+
+#Metodo de la secante
+#IDEA: Es similar al metodo de la falsa posicion, solo que utilizando un metodo abierto
+def secante(funcion, x0:float, x1:float, tolerancia, max_iter = 100):
+    iteracion: int = 0
+    ea: float = 1.0
+    errores_historial = []
+    
+    while ea > tolerancia and iteracion < max_iter:
+        f0 = funcion(x0)
+        f1 = funcion(x1)
+        
+        #Evitando la división por cero 
+        if (f0 - f1) == 0.0:
+            print("Error: División por cero. Pendiente nula.")
+            return None, None, None
+
+        # Fórmula de la secante
+        x2 = x1 - (f1 * (x0 - x1)) / (f0 - f1)
+
+        # Calculando el error
+        if x2 != 0:
+            ea = abs((x2 - x1) / x2)
+            errores_historial.append(ea)
+
+        # Deslizando los puntos para la siguiente vuelta
+        x0 = x1
+        x1 = x2
+        
+        iteracion += 1
+
+    return x2, errores_historial, iteracion
