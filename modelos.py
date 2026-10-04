@@ -101,7 +101,7 @@ def puntoFijo(funcion, x0:float , tolerancia ,max_iter = 100):
     xr:float = x0
     errores_historial = []
 
-    #implementando un bucle para hcer el metodo
+    #implementando un bucle para hacer el metodo
     while ea > tolerancia and iteracion < max_iter:
         #Guardando el primer punto para luego medir el error
         xr_old = xr 
@@ -126,7 +126,7 @@ def newtonRaphson(funcion, Dfuncion , x0:float , tolerancia ,max_iter = 100):
     xr:float = x0
     errores_historial = []
 
-    #implementando un bucle para hcer el metodo
+    #implementando un bucle para hacer el metodo
     while ea > tolerancia and iteracion < max_iter:
         #Guardando el primer punto para luego medir el error
         xr_old = xr 
