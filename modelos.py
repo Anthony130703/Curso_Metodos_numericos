@@ -187,7 +187,7 @@ def secante(funcion, x0:float, x1:float, tolerancia, max_iter = 100):
 
 #Sustitución forward
 def sustitucion_forward(L, b):
-    #Resuelve Lx = b para L triangular inferior
+    #Resolviendo Lx = b para L triangular inferior
     n = len(b)
     x = np.zeros(n, dtype=float)
     for k in range(n):
@@ -201,7 +201,7 @@ def sustitucion_forward(L, b):
 
 #sustitucion backward
 def sustitucion_backward(U, b):
-    """Resuelve Ux = b para U triangular superior."""
+    ##Resolviendo Ux = b para U triangular superior
     n = len(b)
     x = np.zeros(n, dtype=float)
     for k in range(n - 1, -1, -1):
