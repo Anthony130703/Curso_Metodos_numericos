@@ -187,13 +187,15 @@ def secante(funcion, x0:float, x1:float, tolerancia, max_iter = 100):
 
 #Sustitución forward
 def sustitucion_forward(L, b):
-    """Resuelve Lx = b para L triangular inferior."""
+    #Resuelve Lx = b para L triangular inferior
     n = len(b)
     x = np.zeros(n, dtype=float)
     for k in range(n):
         if abs(L[k, k]) < 1e-15:
             raise ValueError(f"Elemento diagonal nulo en fila {k}.")
-        suma = np.dot(L[k, :k], x[:k])
+        suma = 0
+        for i in range(k):
+            suma = suma + L[k , i]*x[i]
         x[k] = (b[k] - suma) / L[k, k]
     return x
 
@@ -205,7 +207,9 @@ def sustitucion_backward(U, b):
     for k in range(n - 1, -1, -1):
         if abs(U[k, k]) < 1e-15:
             raise ValueError(f"Elemento diagonal nulo en fila {k}.")
-        suma = np.dot(U[k, k+1:], x[k+1:])
+        suma = 0
+        for i in range (K+1, n):
+            suma = suma + U[k,i] * x[i]
         x[k] = (b[k] - suma) / U[k, k]
     return x
 
