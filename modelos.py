@@ -213,3 +213,41 @@ def sustitucion_backward(U, b):
         x[k] = (b[k] - suma) / U[k, k]
     return x
 
+#Metodo de gauss con pivote
+def gauss_pivoteo (A, b):
+    n = len(b)
+    A_copy = [fila[:] for fila in A]
+    b_copy = b[:]
+
+    #Etapa 1: Eliminacion hacia delante con pivoteo parcial
+    for k in range(n-1):
+        #Asumiendo inicialmente que el valor maximo esta en la fila actual k
+        p = k 
+        max_valor = abs(A_copy[k][k])
+        #Buscando si hay un valor mas grande debajo en la misma columna k
+        for i in range(k+1, n):
+            if abs(A_copy[i][k]) > max_valor:
+                max_valor = abs(A_copy[i][k])
+                p = i
+        #Si el maximo no esta en la fila k, intercambiamos la fila k con la fila p
+        if p != k:
+            #Intercambiamos de la fila completa en A
+            for j in range(k, n): #Solo necesitamos intercambiar desde la columna k en adelante
+                temp = A_copy[k][j]
+                A_copy[k][j] = A_copy[p][j]
+                A_copy[p][j] = temp
+            #Intercambiamos la columna b tambien
+            temp_b = b_copy[k]
+            b_copy[k] = b_copy[p]
+            b_copy[p] = temp_b
+        #Verificando si es que toda la columan es cero
+        if abs(A_copy[k][k]) < 1e-15:
+            raise ValueError("El sistema no tiene solucion única")
+        #Aplicando la eliminación gausiana
+        for i in range(k+1, n):
+            factor = A_copy[i][k]/A_copy[k][k]
+            for j in range(k+1, n):
+                A_copy[i][j] = A_copy[i][j] - factor*A_copy[k][j]
+            b_copy[i] = b_copy[i] - factor*b_copy[k]
+    #Finalemnte usamos el metodo sustitucion backward
+    return sustitucion_backward(A_copy, b_copy)
