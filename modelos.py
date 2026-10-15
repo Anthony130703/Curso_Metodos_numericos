@@ -208,7 +208,7 @@ def sustitucion_backward(U, b):
         if abs(U[k, k]) < 1e-15:
             raise ValueError(f"Elemento diagonal nulo en fila {k}.")
         suma = 0
-        for i in range (K+1, n):
+        for i in range (k+1, n):
             suma = suma + U[k,i] * x[i]
         x[k] = (b[k] - suma) / U[k, k]
     return x
