@@ -251,3 +251,47 @@ def gauss_pivoteo (A, b):
             b_copy[i] = b_copy[i] - factor*b_copy[k]
     #Finalemnte usamos el metodo sustitucion backward
     return sustitucion_backward(A_copy, b_copy)
+
+#metodo de factorizacion LU (crout)
+def factorizacion_lu_crout(A):
+    n = len(A)
+    #Creamos matrices L y U llenas de ceros
+    L = [[0.0] * n for _ in range(n)]
+    U = [[0.0] * n for _ in range(n)]
+    #llenamos la diagonal de L con unos
+    for i in range(n):
+        L[i][i] = 1.0
+    #Recorremos cada columna j, para resolver lA sumatoria
+    for j in range(n):
+        #PASO 1: Calculando los elementos de U (filas i <= j)
+        for i in range(j + 1):
+            suma = 0.0
+            #La sumatoria va desde k = 0 hasta i - 1
+            for k in range(i):
+                suma += L[i][k] * U[k][j]    
+            U[i][j] = A[i][j] - suma
+        #Comprobación de seguridad: Si el pivote en U es cero, el método falla
+        if abs(U[j][j]) < 1e-15:
+            raise ValueError(f"Pivote cero detectado en U[{j}][{j}].")
+        #PASO 2: Calculando los elementos de L (filas i > j)
+        for i in range(j + 1, n):
+            suma = 0.0
+            # La sumatoria va desde k = 0 hasta j - 1
+            for k in range(j):
+                suma += L[i][k] * U[k][j]
+            L[i][j] = (A[i][j] - suma) / U[j][j]
+    #Finalemnte retornamos las matrices L y U        
+    return L, U
+
+#Ahora creamos la funcion para resolver el LU
+def resolver_lu_simple(A, b):
+    #Factorizamos la matriz A
+    L, U = factorizacion_lu_crout(A)
+    #Resolvemos L * d = b (Sustitución Forward)
+    # Como L es triangular inferior, usamos sustitución hacia adelante
+    d = sustitucion_forward(L, b)
+    #Resolviendo U * x = d (Sustitución Backward)
+    # Como U es triangular superior, usamos sustitución hacia atrás
+    x = sustitucion_backward(U, d)
+    
+    return x
