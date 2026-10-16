@@ -191,12 +191,12 @@ def sustitucion_forward(L, b):
     n = len(b)
     x = np.zeros(n, dtype=float)
     for k in range(n):
-        if abs(L[k, k]) < 1e-15:
+        if abs(L[k][k]) < 1e-15:
             raise ValueError(f"Elemento diagonal nulo en fila {k}.")
         suma = 0
         for i in range(k):
-            suma = suma + L[k , i]*x[i]
-        x[k] = (b[k] - suma) / L[k, k]
+            suma = suma + L[k][i]*x[i]
+        x[k] = (b[k] - suma) / L[k][k]
     return x
 
 #sustitucion backward
@@ -205,12 +205,12 @@ def sustitucion_backward(U, b):
     n = len(b)
     x = np.zeros(n, dtype=float)
     for k in range(n - 1, -1, -1):
-        if abs(U[k, k]) < 1e-15:
+        if abs(U[k][k]) < 1e-15:
             raise ValueError(f"Elemento diagonal nulo en fila {k}.")
         suma = 0
         for i in range (k+1, n):
-            suma = suma + U[k,i] * x[i]
-        x[k] = (b[k] - suma) / U[k, k]
+            suma = suma + U[k][i] * x[i]
+        x[k] = (b[k] - suma) / U[k][k]
     return x
 
 #Metodo de gauss con pivote
@@ -295,3 +295,112 @@ def resolver_lu_simple(A, b):
     x = sustitucion_backward(U, d)
     
     return x
+
+#Haciendo el metodo de cholesky
+import math
+
+def cholesky(A):
+    n = len(A)
+    #Creando una matriz G llena de ceros
+    G = [[0.0] * n for _ in range(n)]
+    #Recorremos fila por fila
+    for i in range(n):
+        #PASO 1: Calculando el elemento de la diagonal G[i][i]
+        suma_cuadrados = 0.0
+        #haciendo que k recorra las filas estrictamente por encima de i
+        for k in range(i):
+            suma_cuadrados += G[k][i] * G[k][i]
+        valor_raiz = A[i][i] - suma_cuadrados
+        #Validando: si es negativo o cero, no es Positiva Definida
+        if valor_raiz <= 0:
+            raise ValueError("La matriz no es Simétrica Positiva Definida.")
+        G[i][i] = math.sqrt(valor_raiz)
+        #PASO 2: Calculamos el resto de los elementos en la fila i (a la derecha)
+        for j in range(i + 1, n):
+            suma_cruzada = 0.0
+            for k in range(i):
+                #Multiplicando el elemento de la columna i por el de la columna j
+                suma_cruzada += G[k][i] * G[k][j]    
+            G[i][j] = (A[i][j] - suma_cruzada) / G[i][i]
+            
+    return G
+
+#Codigo para la transpuesta de una matriz
+def transponer_matriz(G):
+    n = len(G)
+    #Creando una nueva matriz llena de ceros
+    G_T = [[0.0] * n for _ in range(n)]
+    for i in range(n):
+        for j in range(n):
+            #Asignamos invirtiendo los indices
+            G_T[i][j] = G[j][i]
+    return G_T
+
+#Resolviendo cholesky
+def resolver_cholesky(A, b):
+    #Obtenemos G usando nuestro algoritmo de Cholesky
+    G = cholesky(A)
+    #Calculamos la transpuesta G^T
+    G_T = transponer_matriz(G)
+    #Resolvemos (G^T) * d = b
+    d = sustitucion_forward(G_T, b)
+    #Resolvemos G * x = d
+    x = sustitucion_backward(G, d)
+    
+    return x
+
+#Algoritmo para calcular la inversa de una matriz
+def calcular_inversa(A):
+    n = len(A)
+    #Creando una matriz vacia para guardar la inversa
+    A_inv = [[0.0] * n for _ in range(n)]
+    #Resolvemos el sistema n veces (una por cada columna)
+    for j in range(n):
+        #Construimos la columna j de la matriz Identidad (vector I_j)
+        I_j = [0.0] * n
+        I_j[j] = 1.0
+        #Usando nuestro metodo de Gauss para resolver A * x = I_j
+        columna_solucion = gauss_pivoteo(A, I_j)
+        #Guardamos esa solución como la columna j de nuestra matriz inversa
+        for i in range(n):
+            A_inv[i][j] = columna_solucion[i]
+            
+    return A_inv
+
+#metodo para la norma de un vector
+def norma_vec(v, tipo=2):
+    #Calculando la norma vectorial 1, 2 o infinito ('inf')
+    v = np.asarray(v, dtype=float)
+    if tipo == 1:
+        return float(np.sum(np.abs(v)))
+    elif tipo == 2:
+        return float(np.sqrt(np.sum(v ** 2)))
+    elif tipo == 'inf':
+        return float(np.max(np.abs(v)))
+    else:
+        raise ValueError("Tipo de norma no soportado. Use 1, 2 o 'inf'.")
+
+#Metodo para la norma de una matriz
+#axis=1: Suma horizontalmente (por filas)
+#axis=0: Suma verticalmente (por columnas)
+def norma_mat(A, tipo='F'):
+    A = np.asarray(A, dtype=float)
+    if tipo == 'F':
+        #Suma el cuadrado de absolutamente todos los elementos y saca la raiz
+        return float(np.sqrt(np.sum(A ** 2)))   
+    elif tipo == 'inf':
+        #1. np.abs(A) vuelve todo positivo.
+        #2. np.sum(..., axis=1) suma cada fila individualmente, creando un vector de sumas.
+        #3. np.max() saca el valor más grande de ese vector de sumas.
+        return float(np.max(np.sum(np.abs(A), axis=1)))  
+    elif tipo == 1:
+        #Igual, pero axis=0 suma verticalmente (cada columna).
+        return float(np.max(np.sum(np.abs(A), axis=0)))    
+    else:
+        raise ValueError("Tipo de norma no soportado. Use 'F', 'inf' o 1.")    
+
+#Calculando el numero de condicion
+def numero_condicion(A, tipo='F'):
+    #Calculando kappa(A) = ||A|| * ||A^{-1}|| en la norma indicada
+    A_inv = calcular_inversa(A)
+    return norma_mat(A, tipo=tipo) * norma_mat(A_inv, tipo=tipo)
