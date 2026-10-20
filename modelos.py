@@ -404,3 +404,76 @@ def numero_condicion(A, tipo='F'):
     #Calculando kappa(A) = ||A|| * ||A^{-1}|| en la norma indicada
     A_inv = calcular_inversa(A)
     return norma_mat(A, tipo=tipo) * norma_mat(A_inv, tipo=tipo)
+
+##########################################
+#Metodos iterativos
+
+#Producto escalar de dos vectores
+def producto_escalar(u, v):
+    n = len(u)
+    suma = 0.0
+    for i in range(n):
+        suma = suma + u[i]*v[i]
+    return suma
+
+#Producto matriz por un vector
+def matriz_por_vector(A, x):
+    n = len(x)
+    resultado = np.zeros(n, dtype = float)
+    for i in range(n):
+        suma = 0.0
+        for j in range(n):
+            suma = suma + A[i][j]*x[j]
+        resultado[i] = suma
+    return resultado
+
+#Calculando el residuo r = Ax - b
+def residuo(A, x, b):
+    n = len(b)
+    Ax = matriz_por_vector(A, x)
+    r = np.zeros(n, dtype=float)
+    for i in range(n):
+        r[i] = Ax[i] - b[i]
+    return r
+
+#Metodo jacobi
+def jacobi(A, b, tol=1e-8, max_iter=1000):
+    n = len(b)
+    x = np.zeros(n, dtype=float)
+    #Verificando la diagonal
+    for i in range(n):
+        if abs(A[i][i]) < 1e-15:
+            raise ValueError("Elemento diagonal nulo")
+    #Una vez verificado, comenzamos con las iteraciones
+    for k in range(max_iter):
+        x_nuevo = np.zeros(n, dtype=float)#Creando el vector donde se guardarn los nuevos valores
+        for i in range(n):
+            suma = 0.0
+            for j in range(n):
+                if j != i:
+                    suma  = suma + A[i][j]*x[j]
+            x_nuevo[i] = (b[i] - suma)/A[i][i]
+        #Actualizamos el vector
+        x = x_nuevo
+        #Comprobando la convergencia
+        r = residuo(A, x, b)
+        if  norma_vec(r, 'inf') < tol:
+            return x, k+1
+
+#Metodo de SOR
+def sor(A, b, omega =1.2, tol= 1e-8, max_iter=1000):
+    n = len(b)
+    x = np.zeros(n, dtype=float)
+    #Verificando el parametro w
+    if omega<=0 or omega >=2:
+        raise ValueError("Omega debe estar entre 0 y 2")
+    #verificando la diagonal
+    for i in range(n):
+            if abs(A[i][i]) < 1e-15:
+                raise ValueError("Elemento diagonal nulo")
+    #Comenzando las iteraciones
+    for k in range(max_iter):
+        for i in range (n):
+            suma = 0.0
+            for j in range(n):
+                
