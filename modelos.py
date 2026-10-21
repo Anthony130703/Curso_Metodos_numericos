@@ -436,6 +436,16 @@ def residuo(A, x, b):
         r[i] = Ax[i] - b[i]
     return r
 
+# Calculando el delta entre dos iteraciones
+def calcular_delta(x_nuevo, x_anterior):
+    n = len(x_nuevo)
+    delta = 0.0
+    for i in range(n):
+        diferencia = abs(x_nuevo[i] - x_anterior[i])
+        if diferencia > delta:
+            delta = diferencia
+    return delta
+
 #Metodo jacobi
 def jacobi(A, b, tol=1e-8, max_iter=1000):
     n = len(b)
@@ -476,4 +486,86 @@ def sor(A, b, omega =1.2, tol= 1e-8, max_iter=1000):
         for i in range (n):
             suma = 0.0
             for j in range(n):
-                
+                if j != i:
+                    suma = suma + A[i][j]*x[j]
+            #Calculamos el valor de Gauss-Seidel
+            x_gs = (b[i] - suma)/A[i][i]
+            #Aplicamos la relajacion
+            x[i] = (1 - omega)*x[i] + omega*x_gs
+        # Comprobando convergencia
+        r = residuo(A, x, b)
+        if norma_vec(r, 'inf') < tol:
+            return x, k + 1
+    raise ValueError("SOR no alcanzo la convergencia")
+
+#Metodo Gauss- seidel
+def gauss_seidel(A, b, tol=1e-8, max_iter=1000):
+    return sor(A, b, omega=1.0, tol=tol, max_iter=max_iter)
+
+# Metodo de maximo descenso
+def maximo_descenso(A, b, tol=1e-8, max_iter=1000):
+    n = len(b)
+    x = np.zeros(n, dtype=float)
+    # Calculando el residuo inicial
+    r = residuo(A, x, b)
+    if norma_vec(r, 'inf') < tol:
+        return x, 0
+    # Comenzando las iteraciones
+    for k in range(max_iter):
+        # Calculamos A*r
+        Ar = matriz_por_vector(A, r)
+        # Calculamos alpha
+        numerador = producto_escalar(r, r)
+        denominador = producto_escalar(r, Ar)
+        if denominador <= 0:
+            raise ValueError("Denominador no positivo")
+        alpha = numerador/denominador
+        # Actualizamos x y r
+        for i in range(n):
+            x[i] = x[i] - alpha*r[i]
+            r[i] = r[i] - alpha*Ar[i]
+        # Comprobando la convergencia
+        if norma_vec(r, 'inf') < tol:
+            return x, k + 1
+    raise ValueError("Maximo descenso no alcanzo la convergencia")
+
+# Metodo de gradiente conjugado
+def gradiente_conjugado(A, b, tol=1e-8, max_iter=1000):
+    n = len(b)
+    x = np.zeros(n, dtype=float)
+    # Calculando residuo inicial
+    r = residuo(A, x, b)
+    # Calculando la direccion inicial p = -r
+    p = np.zeros(n, dtype=float)
+    for i in range(n):
+        p[i] = -r[i]
+    if norma_vec(r, 'inf') < tol:
+        return x, 0
+    # Calculamos r^T*r
+    rr = producto_escalar(r, r)
+    # Comenzando las iteraciones
+    for k in range(max_iter):
+        # Calculamos A*p
+        Ap = matriz_por_vector(A, p)
+        # Calculamos alpha
+        denominador = producto_escalar(p, Ap)
+        if denominador <= 0:
+            raise ValueError("Denominador no positivo")
+        alpha = rr/denominador
+        # Actualizamos x y r
+        for i in range(n):
+            x[i] = x[i] + alpha*p[i]
+            r[i] = r[i] + alpha*Ap[i]
+        # Comprobando la convergencia
+        if norma_vec(r, 'inf') < tol:
+            return x, k + 1
+        # Calculamos el nuevo r^T*r
+        rr_nuevo = producto_escalar(r, r)
+        # Calculamos beta
+        beta = rr_nuevo/rr
+        # Actualizamos la direccion p
+        for i in range(n):
+            p[i] = -r[i] + beta*p[i]
+        # Guardamos el nuevo valor
+        rr = rr_nuevo
+    raise ValueError("Gradiente conjugado no alcanzo la convergencia")
