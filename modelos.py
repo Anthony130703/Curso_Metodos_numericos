@@ -446,6 +446,16 @@ def calcular_delta(x_nuevo, x_anterior):
             delta = diferencia
     return delta
 
+def es_simetrica(A, tol=1e-12):
+    n = len(A)
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            if abs(A[i][j] - A[j][i]) > tol:
+                return False
+
+    return True
+
 #Metodo jacobi
 def jacobi(A, b, tol=1e-8, max_iter=1000):
     n = len(b)
@@ -463,12 +473,16 @@ def jacobi(A, b, tol=1e-8, max_iter=1000):
                 if j != i:
                     suma  = suma + A[i][j]*x[j]
             x_nuevo[i] = (b[i] - suma)/A[i][i]
+        #Calculamos la delta
+        delta = calcular_delta(x_nuevo, x)
         #Actualizamos el vector
         x = x_nuevo
         #Comprobando la convergencia
         r = residuo(A, x, b)
-        if  norma_vec(r, 'inf') < tol:
-            return x, k+1
+        if delta < tol and norma_vec(r, 'inf') < tol:
+            return x, k + 1, delta
+
+    raise ValueError("Jacobi no alcanzo la convergencia")
 
 #Metodo de SOR
 def sor(A, b, omega =1.2, tol= 1e-8, max_iter=1000):
@@ -483,6 +497,8 @@ def sor(A, b, omega =1.2, tol= 1e-8, max_iter=1000):
                 raise ValueError("Elemento diagonal nulo")
     #Comenzando las iteraciones
     for k in range(max_iter):
+        # Guardamos los valores anteriores
+        x_anterior = x.copy()
         for i in range (n):
             suma = 0.0
             for j in range(n):
@@ -492,10 +508,14 @@ def sor(A, b, omega =1.2, tol= 1e-8, max_iter=1000):
             x_gs = (b[i] - suma)/A[i][i]
             #Aplicamos la relajacion
             x[i] = (1 - omega)*x[i] + omega*x_gs
-        # Comprobando convergencia
+        # Calculamos delta
+        delta = calcular_delta(x, x_anterior)
+        # Calculando el residuo
         r = residuo(A, x, b)
-        if norma_vec(r, 'inf') < tol:
-            return x, k + 1
+        #comprobando la convergencia
+        if delta < tol and norma_vec(r, 'inf') < tol:
+            return x, k + 1, delta
+
     raise ValueError("SOR no alcanzo la convergencia")
 
 #Metodo Gauss- seidel
@@ -512,6 +532,7 @@ def maximo_descenso(A, b, tol=1e-8, max_iter=1000):
         return x, 0
     # Comenzando las iteraciones
     for k in range(max_iter):
+        x_anterior = x.copy()
         # Calculamos A*r
         Ar = matriz_por_vector(A, r)
         # Calculamos alpha
@@ -524,9 +545,12 @@ def maximo_descenso(A, b, tol=1e-8, max_iter=1000):
         for i in range(n):
             x[i] = x[i] - alpha*r[i]
             r[i] = r[i] - alpha*Ar[i]
-        # Comprobando la convergencia
-        if norma_vec(r, 'inf') < tol:
-            return x, k + 1
+        # Calculamos delta
+        delta = calcular_delta(x, x_anterior)
+        # Comprobamos la convergencia
+        if delta < tol and norma_vec(r, 'inf') < tol:
+            return x, k + 1, delta
+
     raise ValueError("Maximo descenso no alcanzo la convergencia")
 
 # Metodo de gradiente conjugado
@@ -545,6 +569,7 @@ def gradiente_conjugado(A, b, tol=1e-8, max_iter=1000):
     rr = producto_escalar(r, r)
     # Comenzando las iteraciones
     for k in range(max_iter):
+        x_anterior = x.copy()
         # Calculamos A*p
         Ap = matriz_por_vector(A, p)
         # Calculamos alpha
@@ -556,9 +581,11 @@ def gradiente_conjugado(A, b, tol=1e-8, max_iter=1000):
         for i in range(n):
             x[i] = x[i] + alpha*p[i]
             r[i] = r[i] + alpha*Ap[i]
-        # Comprobando la convergencia
+        # Calculamos delta
+        delta = calcular_delta(x, x_anterior)
+        # Comprobamos la convergencia
         if norma_vec(r, 'inf') < tol:
-            return x, k + 1
+            return x, k + 1, delta
         # Calculamos el nuevo r^T*r
         rr_nuevo = producto_escalar(r, r)
         # Calculamos beta
