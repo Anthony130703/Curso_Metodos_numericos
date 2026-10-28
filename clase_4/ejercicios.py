@@ -1,12 +1,12 @@
 import math
 from modelos import sustitucion_backward, sustitucion_forward, gauss_pivoteo, calcular_inversa, norma_mat, numero_condicion,norma_vec
 #ejercicio a)
-# U_a = [
-#     [1.0,  2.0,  1.0],
-#     [0.0, -4.0,  1.0],
-#     [0.0,  0.0, -2.0]
-# ]
-# b_a = [5.0, 2.0, 4.0]
+U_a = [
+    [1.0,  2.0,  1.0],
+    [0.0, -4.0,  1.0],
+    [0.0,  0.0, -2.0]
+]
+b_a = [5.0, 2.0, 4.0]
 
 # x_a = sustitucion_backward(U_a, b_a)
 # print("Solución (a) Backward: ", x_a)
