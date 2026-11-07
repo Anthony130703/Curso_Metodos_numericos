@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 #Formula para el mapa logisitico
 def X(n, x0, r):
     Datos = [x0]
@@ -596,3 +597,25 @@ def gradiente_conjugado(A, b, tol=1e-8, max_iter=1000):
         # Guardamos el nuevo valor
         rr = rr_nuevo
     raise ValueError("Gradiente conjugado no alcanzo la convergencia")
+
+#Interpolaciones
+
+#Polinomios de lagrange
+class InterpolacionLagrange:
+    def __init__(self, x_datos, y_datos):
+        self.x = x_datos
+        self.y = y_datos
+        self.n = len(x_datos)
+        
+    def evaluar(self, t):
+        resultado = 0.0
+        for i in range(self.n):
+            l_i = 1.0
+            for j in range(self.n):
+                if i != j:
+                    l_i = l_i * (t - self.x[j])/(self.x[i] - self.x[j])
+            resultado += self.y[i] * l_i
+        return resultado
+    
+    def a_texto(self):
+        terminos = []
