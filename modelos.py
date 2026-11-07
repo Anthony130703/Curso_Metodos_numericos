@@ -601,6 +601,21 @@ def gradiente_conjugado(A, b, tol=1e-8, max_iter=1000):
 #Interpolaciones
 
 #Polinomios de lagrange
+class InterpolacionMonomios:
+    def __init__(self, x_datos, y_datos):
+        self.x = x_datos
+        self.y = y_datos
+        self.n = len(x_datos)
+
+        #Construyendo la matriz de Vandermonde
+        self.A = [[0.0]* self.n for _ in range (self.n)]
+        for i in range(self.n):
+            for j in range(self.n):
+                self.A[i][j] = (self.x[i]**j)
+
+        #Resolviendo el sistema A*lambda = y
+        
+
 class InterpolacionLagrange:
     def __init__(self, x_datos, y_datos):
         self.x = x_datos
