@@ -600,6 +600,44 @@ def gradiente_conjugado(A, b, tol=1e-8, max_iter=1000):
 
 #Interpolaciones
 
+#Codigo para saber las soluciones de un sistema
+def es_diagonal_dominante(A):
+    n = len(A)
+    dominante = True
+    for i in range(n):
+        suma = 0.0
+        for j in range(n):
+            if i != j:
+                suma = suma + abs(A[i][j])
+        if abs(A[i][i]) <= suma:
+            dominante = False
+    return dominante
+
+def solucionador_automatico(A, b):
+    condicion = numero_condicion(A)
+    
+    if condicion > 10000:
+        return gauss_pivoteo(A, b)
+        
+    simetrica = es_simetrica(A)
+    
+    if simetrica:
+        es_positiva = True
+        try:
+            cholesky(A)
+        except:
+            es_positiva = False
+            
+        if es_positiva:
+            return resolver_cholesky(A, b)
+            
+    dominante = es_diagonal_dominante(A)
+    
+    if dominante:
+        return gauss_seidel(A, b)
+        
+    return resolver_lu_simple(A, b)
+
 #Polinomios de lagrange
 class InterpolacionMonomios:
     def __init__(self, x_datos, y_datos):
@@ -614,6 +652,13 @@ class InterpolacionMonomios:
                 self.A[i][j] = (self.x[i]**j)
 
         #Resolviendo el sistema A*lambda = y
+        self.lambdas = solucionador_automatico(self.A, self.y)
+        
+    def evaluar(self, t):
+        resultado = 0.0
+        for j in range(self.n):
+            resultado = resultado + self.lambdas[j] * (t ** j)
+        return resultado
         
 
 class InterpolacionLagrange:
@@ -626,11 +671,10 @@ class InterpolacionLagrange:
         resultado = 0.0
         for i in range(self.n):
             l_i = 1.0
+            # Este bucle es para construir la productoria
             for j in range(self.n):
                 if i != j:
                     l_i = l_i * (t - self.x[j])/(self.x[i] - self.x[j])
             resultado += self.y[i] * l_i
         return resultado
     
-    def a_texto(self):
-        terminos = []
