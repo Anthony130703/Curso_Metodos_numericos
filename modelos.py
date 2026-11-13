@@ -659,6 +659,22 @@ class InterpolacionMonomios:
         for j in range(self.n):
             resultado = resultado + self.lambdas[j] * (t ** j)
         return resultado
+    
+    def graficar(self):
+        x_min = min(self.x)
+        x_max = max(self.x)
+        margen = (x_max - x_min) * 0.1
+        t_vector = np.linspace(x_min - margen, x_max + margen, 100)
+        y_vector = np.zeros(100)
+        for i in range(100):
+            y_vector[i] = self.evaluar(t_vector[i])
+            
+        plt.figure(figsize=(8, 5))
+        plt.plot(t_vector, y_vector, 'b-', label="Monomios")
+        plt.plot(self.x, self.y, 'ro', markersize=8)
+        plt.grid(True)
+        plt.legend()
+        plt.show()
         
 
 class InterpolacionLagrange:
@@ -678,3 +694,95 @@ class InterpolacionLagrange:
             resultado += self.y[i] * l_i
         return resultado
     
+    def graficar(self):
+        x_min = min(self.x)
+        x_max = max(self.x)
+        margen = (x_max - x_min) * 0.1
+        t_vector = np.linspace(x_min - margen, x_max + margen, 100)
+        y_vector = np.zeros(100)
+        for i in range(100):
+            y_vector[i] = self.evaluar(t_vector[i])
+            
+        plt.figure(figsize=(8, 5))
+        plt.plot(t_vector, y_vector, color='orange', linestyle='-', label="Lagrange")
+        plt.plot(self.x, self.y, 'ro', markersize=8)
+        plt.grid(True)
+        plt.legend()
+        plt.show()
+    
+class InterpolacionNewton:
+    def __init__(self, x_datos, y_datos):
+        self.x = x_datos
+        self.y = y_datos
+        self.n = len(x_datos)
+        self.A = [[0.0]*self.n for _ in range(self.n)]
+        
+        for i in range(self.n):
+            for j in range(self.n):
+                if j == 0:
+                    self.A[i][j] = 1.0
+                elif j <= i:
+                    producto = 1.0
+                    for k in range(j):
+                        producto = producto * (self.x[i] - self.x[k])
+                    self.A[i][j] = producto
+        self.lambdas = sustitucion_forward(self.A, self.y)
+        
+    def evaluar(self, t):
+        resultado = 0.0
+        for j in range(self.n):
+            pi_j = 1.0
+            for k in range(j):
+                pi_j = pi_j * (t - self.x[k])
+            resultado = resultado + self.lambdas[j] * pi_j
+        return resultado
+    
+    def graficar(self):
+        x_min = min(self.x)
+        x_max = max(self.x)
+        margen = (x_max - x_min) * 0.1
+        t_vector = np.linspace(x_min - margen, x_max + margen, 100)
+        y_vector = np.zeros(100)
+        for i in range(100):
+            y_vector[i]= self.evaluar(t_vector[i])
+        
+        plt.figure(figsize=(8, 5))
+        plt.plot(t_vector, y_vector, 'g-', label="Newton")
+        plt.plot(self.x, self.y, 'ro', markersize=8)
+        plt.grid(True)
+        plt.legend()
+        plt.show
+    
+def graficar_comparacion(x_datos, y_datos, ver_mono=True, ver_lagr=True, ver_newt=True):
+    x_min = min(x_datos)
+    x_max = max(x_datos)
+    margen = (x_max - x_min) * 0.1
+    t_vector = np.linspace(x_min - margen, x_max + margen, 100)
+    
+    plt.figure(figsize=(10, 6))
+    
+    if ver_mono:
+        metodo_mono = InterpolacionMonomios(x_datos, y_datos)
+        y_mono = np.zeros(100)
+        for i in range(100):
+            y_mono[i] = metodo_mono.evaluar(t_vector[i])
+        plt.plot(t_vector, y_mono, color='blue', linestyle='-', linewidth=4, label='Monomios')
+        
+    if ver_lagr:
+        metodo_lagr = InterpolacionLagrange(x_datos, y_datos)
+        y_lagr = np.zeros(100)
+        for i in range(100):
+            y_lagr[i] = metodo_lagr.evaluar(t_vector[i])
+        plt.plot(t_vector, y_lagr, color='orange', linestyle='--', linewidth=3, label='Lagrange')
+        
+    if ver_newt:
+        metodo_newt = InterpolacionNewton(x_datos, y_datos)
+        y_newt = np.zeros(100)
+        for i in range(100):
+            y_newt[i] = metodo_newt.evaluar(t_vector[i])
+        plt.plot(t_vector, y_newt, color='green', linestyle=':', linewidth=2, label='Newton')
+        
+    plt.plot(x_datos, y_datos, 'ro', markersize=8, label='Datos Experimentales')
+    plt.grid(True)
+    plt.legend()
+    plt.show()
