@@ -786,3 +786,11 @@ def graficar_comparacion(x_datos, y_datos, ver_mono=True, ver_lagr=True, ver_new
     plt.grid(True)
     plt.legend()
     plt.show()
+
+def puntosChebyshev(a, b, n):
+    puntos = [0.0]
+    for j in range(n+1):
+        angulo = (j * np.pi)/n
+        x_j = a + ((a-b)/ 2.0) * (1.0 + np.cos(angulo))
+        puntos.append(x_j)
+    return puntos
