@@ -751,7 +751,7 @@ class InterpolacionNewton:
         plt.plot(self.x, self.y, 'ro', markersize=8)
         plt.grid(True)
         plt.legend()
-        plt.show
+        plt.show()
     
 def graficar_comparacion(x_datos, y_datos, ver_mono=True, ver_lagr=True, ver_newt=True):
     x_min = min(x_datos)
