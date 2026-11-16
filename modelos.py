@@ -926,3 +926,198 @@ class InterpolacionSplineCubica:
         plt.grid(True)
         plt.legend()
         plt.show()
+
+#Ajuste de Curvas
+
+class RegresionLineal:
+    def __init__(self, x_datos, y_datos):
+        self.x = x_datos
+        self.y = y_datos
+        self.n = len(x_datos)
+
+        self.a0 = 0.0
+        self.a1 = 0.0
+        self.r2 = 0.0
+        self.syx = 0.0
+
+        self._calcularAjuste()
+
+    def _calcularAjuste(self):
+        suma_x = 0.0
+        suma_y = 0.0
+        suma_xy = 0.0
+        suma_x2 = 0.0
+
+        for i in range(self.n):
+            suma_x = suma_x + self.x[i]
+            suma_y = suma_y + self.y[i]
+            suma_xy = suma_xy + (self.x[i] * self.y[i])
+            suma_x2 = suma_x2 + (self.x[i] * self.x[i])
+
+        promedio_x = suma_x / self.n
+        promedio_y = suma_y / self.n
+
+        #Aplicando las formulas para hallar los coeficientes
+        numerador_a1 = (self.n * suma_xy) - (suma_x * suma_y)
+        denominador_a1 = (self.n * suma_x2) - (suma_x * suma_x)
+        self.a1 = numerador_a1 / denominador_a1
+        self.a0 = promedio_y - (self.a1 * promedio_x)
+
+        #Calculando los errores
+        st = 0.0
+        sr = 0.0
+        for i in range(self.n):
+            st = st + (self.y[i] - promedio_y)**2
+            modelo_y = self.a0 + self.a1 * self.x[i]
+            sr = sr + (self.y[i] - modelo_y)**2
+
+        self.syx = np.sqrt(sr /(self.n - 2))
+        self.r2 = (st - sr) / st
+
+    def evaluar(self, x_val):
+        return self.a0 + self.a1 * x_val
+
+class RegresionPolinomial:
+    def __init__(self, x_datos, y_datos, grado):
+        self.x = x_datos
+        self.y = y_datos
+        self.n = len(x_datos)
+        self.m = grado
+        self.coeficientes = []
+        self.syx = 0.0
+        self.r2 = 0.0
+        self._calcularAjuste()
+
+    def _calcularAjuste(self):
+        filas = self.m + 1
+        matriz = []
+        for i in range(filas):
+            fila_actual = []
+            for j in range(filas):
+                fila_actual.append(0.0)
+            matriz.append(fila_actual)
+
+        vector_b = []
+        for i in range(filas):
+            vector_b.append(0.0)
+
+        for i in range(filas):
+            for j in range(i + 1):
+                k = i + j
+                suma = 0.0
+                for l in range(self.n):
+                    suma = suma + (self.x[l] ** k)
+                matriz[i][j] = suma
+                matriz[j][i] = suma
+
+            suma_y = 0.0
+            for l in range(self.n):
+                suma_y = suma_y + self.y[l] * (self.x[l] ** i)
+            vector_b[i] = suma_y
+
+        self.coeficientes = solucionador_automatico(matriz, vector_b)
+
+        st = 0.0
+        sr = 0.0
+        suma_y_total = 0.0
+        for i in range(self.n):
+            suma_y_total = suma_y_total + self.y[i]
+        promedio_y = suma_y_total / self.n
+
+        for i in range(self.n):
+            st = st + (self.y[i] - promedio_y)**2
+            estimado = 0.0
+            for j in range(filas):
+                estimado = estimado + self.coeficientes[j] * (self.x[i]**j)
+            sr = sr + (self.y[i] - estimado)**2
+
+        self.syx = np.sqrt(sr / (self.n - (self.m + 1)))
+        self.r2 = (st - sr) / st
+
+    def evaluar(self, x_val):
+        resultado = 0.0
+        for j in range(self.m + 1):
+            resultado = resultado + self.coeficientes[j] * (x_val ** j)
+        return resultado
+
+class RegresionNoLineal:
+    def __init__(self, x_datos, y_datos, paramIni, funcion, derivadas):
+        self.x = x_datos
+        self.y = y_datos
+        self.n = len(x_datos)
+        self.parametros = paramIni
+        self.num_parametros = len(paramIni)
+        self.modelo = funcion
+        self.derivadas = derivadas
+        self.tolerancia = 1e-6
+        self._optimizar()
+
+    def _optimizar(self):
+        continuar = True
+        while continuar:
+            z = []
+            d = []
+
+            for i in range(self.n):
+                fila_z = self.derivadas(self.x[i], self.parametros)
+                z.append(fila_z)
+
+                valor_modelo = self.modelo(self.x[i], self.parametros)
+                residuo = self.y[i] - valor_modelo
+                d.append(residuo)
+
+            z_transpuesta = self._transponer(z)
+
+            zT_z = self._multiplicar_matrices(z_transpuesta, z)
+            zT_d = self._multiplicar_matriz_vector(z_transpuesta, d)
+
+            delta_a = solucionador_automatico(zT_z, zT_d)
+
+            max_error = 0.0
+            for j in range(self.num_parametros):
+                if self.parametros[j] != 0:
+                    error_actual = abs(delta_a[j] / self.parametros[j])
+                    if error_actual > max_error:
+                        max_error = error_actual
+                self.parametros[j] = self.parametros[j] + delta_a[j]
+
+            if max_error < self.tolerancia:
+                continuar = False
+
+    def _transponer(self, matriz):
+        filas = len(matriz)
+        columnas = len(matriz[0])
+        resultado = []
+        for j in range(columnas):
+            nueva_fila = []
+            for i in range(filas):
+                nueva_fila.append(matriz[i][j])
+            resultado.append(nueva_fila)
+        return resultado
+
+    def _multiplicar_matrices(self, m1, m2):
+        f1 = len(m1)
+        c1 = len(m1[0])
+        c2 = len(m2[0])
+        resultado = []
+        for i in range(f1):
+            fila = []
+            for j in range(c2):
+                suma = 0.0
+                for k in range(c1):
+                    suma = suma + m1[i][k] * m2[k][j]
+                fila.append(suma)
+            resultado.append(fila)
+        return resultado
+
+    def _multiplicar_matriz_vector(self, m, v):
+        filas = len(m)
+        columnas = len(m[0])
+        resultado = []
+        for i in range(filas):
+            suma = 0.0
+            for j in range(columnas):
+                suma = suma + m[i][j] * v[j]
+            resultado.append(suma)
+
+        return resultado
