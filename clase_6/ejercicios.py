@@ -1,4 +1,4 @@
-from modelos import InterpolacionMonomios, InterpolacionLagrange, InterpolacionNewton, puntosChebyshev
+from modelos import InterpolacionMonomios, InterpolacionLagrange, InterpolacionNewton, puntosChebyshev, InterpolacionSplineCubica
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -47,7 +47,7 @@ def ejercicio2():
     lagrange_cheb = InterpolacionLagrange(x_cheb, y_cheb)
 
     #Calculo de errores
-    x_eval = list(np.linspace(a, b, 500))
+    x_eval = list(np.linspace(a, b, 5000))
     error_equi = []
     error_cheb = []
 
@@ -97,12 +97,79 @@ def ejercico2Interpolacion():
 
     plt.figure(figsize=(10, 5))
     plt.plot(valores_n, errores_maximos, 'bo-')
+    plt.title("Evolución del Error Máximo (Chebyshev)")
+    plt.xlabel("Grado del Polinomio (n)")
+    plt.ylabel("Error Máximo")
     plt.yscale('log')
     plt.grid(True)
     plt.show()
 
+def verificar_malla():
+    a = 0.0
+    b = 1.0
+    n = 100                                   # prueba con un n, no hace falta todos
+    x_cheb = puntosChebyshev(a, b, n - 1)
+    y_cheb = [funcion(xi) for xi in x_cheb]
+    lag = InterpolacionLagrange(x_cheb, y_cheb)
 
+    for m in [200, 500, 2000, 5000, 10000]:
+        x_eval = np.linspace(a, b, m)
+        p = np.array([lag.evaluar(t) for t in x_eval])
+        print(m, np.max(np.abs(funcion(x_eval) - p)))
+
+def funcion_seno_cuadrado(t):
+    return (np.sin(t))**2
+
+def ejercicio3():
+    a = 0.0
+    b = 2.0 * np.pi
+    n_puntos = 8
+    grado = n_puntos - 1
+
+    t_equi = list(np.linspace(a, b, n_puntos))
+    y_equi = []
+    for i in range(len(t_equi)):
+        y_equi.append(funcion_seno_cuadrado(t_equi[i]))
+
+    t_cheb = puntosChebyshev(a, b, grado)
+    y_cheb = []
+    for i in range(len(t_cheb)):
+        y_cheb.append(funcion_seno_cuadrado(t_cheb[i]))
+
+    poli_equi = InterpolacionLagrange(t_equi, y_equi)
+    spline = InterpolacionSplineCubica(t_equi, y_equi)
+    poli_cheb = InterpolacionLagrange(t_cheb, y_cheb)
+
+    t_eval = list(np.linspace(a, b, 200))
+    y_real = []
+    y_eval_equi = []
+    y_eval_spline = []
+    y_eval_cheb = []
+
+    for i in range(len(t_eval)):
+        y_real.append(funcion_seno_cuadrado(t_eval[i]))
+        y_eval_equi.append(poli_equi.evaluar(t_eval[i]))
+        y_eval_spline.append(spline.evaluar(t_eval[i]))
+        y_eval_cheb.append(poli_cheb.evaluar(t_eval[i]))
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(t_eval, y_real, 'k-', linewidth=2, label="Real: sen(t)^2")
+    plt.plot(t_eval, y_eval_equi, 'r--', label="Polinomio Grado 7 (Equidistantes)")
+    plt.plot(t_eval, y_eval_spline, 'm-', label="Spline Cubica (Equidistantes)")
+    plt.plot(t_eval, y_eval_cheb, 'b-.', label="Polinomio Grado 7 (Chebyshev)")
+    
+    plt.plot(t_equi, y_equi, 'ro', markersize=6)
+    plt.plot(t_cheb, y_cheb, 'bs', markersize=6)
+    
+    plt.title("Comparacion de Metodos Numéricos")
+    plt.xlabel("Tiempo (t)")
+    plt.ylabel("f(t) = sen(t)^2")
+    plt.grid(True)
+    plt.legend()
+    plt.show()
 
 #ejercicio1()
-ejercicio2()
+#ejercicio2()
 #ejercico2Interpolacion()
+ejercicio3()
+#verificar_malla()

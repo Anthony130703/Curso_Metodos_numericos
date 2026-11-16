@@ -682,17 +682,51 @@ class InterpolacionLagrange:
         self.x = x_datos
         self.y = y_datos
         self.n = len(x_datos)
+        self.w = []
         
+        log_pesos = []
+        signos = []
+        for j in range(self.n):
+            suma = 0.0
+            signo = 1.0
+            for k in range(self.n):
+                if j != k:
+                    dif = self.x[j] - self.x[k]
+                    if dif < 0.0:
+                        signo = signo * -1.0
+                    suma = suma + np.log(abs(dif))
+            log_pesos.append(-suma)
+            signos.append(signo)
+            
+        max_log = max(log_pesos)
+        for j in range(self.n):
+            peso_real = signos[j] * np.exp(log_pesos[j] - max_log)
+            self.w.append(peso_real)
+        
+    # def evaluar(self, t):
+    #     resultado = 0.0
+    #     for i in range(self.n):
+    #         l_i = 1.0
+    #         # Este bucle es para construir la productoria
+    #         for j in range(self.n):
+    #             if i != j:
+    #                 l_i = l_i * (t - self.x[j])/(self.x[i] - self.x[j])
+    #         resultado += self.y[i] * l_i
+    #     return resultado
+
     def evaluar(self, t):
-        resultado = 0.0
         for i in range(self.n):
-            l_i = 1.0
-            # Este bucle es para construir la productoria
-            for j in range(self.n):
-                if i != j:
-                    l_i = l_i * (t - self.x[j])/(self.x[i] - self.x[j])
-            resultado += self.y[i] * l_i
-        return resultado
+            if abs(t - self.x[i]) < 1e-12:
+                return self.y[i]
+        
+        num = 0.0
+        den = 0.0
+        for j in range(self.n):
+            termino = self.w[j] / (t - self.x[j])
+            num = num + termino * self.y[j]
+            den = den + termino
+            
+        return num / den
     
     def graficar(self):
         x_min = min(self.x)
@@ -788,9 +822,107 @@ def graficar_comparacion(x_datos, y_datos, ver_mono=True, ver_lagr=True, ver_new
     plt.show()
 
 def puntosChebyshev(a, b, n):
-    puntos = [0.0]
+    puntos = []
     for j in range(n+1):
         angulo = (j * np.pi)/n
-        x_j = a + ((a-b)/ 2.0) * (1.0 + np.cos(angulo))
+        x_j = a + ((b-a)/ 2.0) * (1.0 + np.cos(angulo))
         puntos.append(x_j)
     return puntos
+
+class InterpolacionSplineCubica:
+    def __init__(self, x_datos, y_datos):
+        self.x = x_datos
+        self.y = y_datos
+        self.n = len(x_datos) - 1
+        
+        # --- FASE 1: Preparación geométrica ---
+        # Vector a: La curva pasa exactamente por los puntos experimentales Y
+        self.a = []
+        for i in range(self.n + 1):
+            self.a.append(self.y[i])
+            
+        # Vector h: El ancho físico de cada tramo (distancia entre puntos X)
+        self.h = []
+        for i in range(self.n):
+            self.h.append(self.x[i+1] - self.x[i])
+            
+        # --- FASE 2: Construcción del sistema matricial ---
+        # Vector alfa: Vector de términos independientes del sistema de derivadas
+        self.alfa = [0.0] * (self.n + 1)
+        for i in range(1, self.n):
+            termino1 = (3.0 / self.h[i]) * (self.a[i+1] - self.a[i])
+            termino2 = (3.0 / self.h[i-1]) * (self.a[i] - self.a[i-1])
+            self.alfa[i] = termino1 - termino2
+            
+        # --- FASE 3: Resolviendo la matriz (Algoritmo de Thomas) ---
+        
+        # Parte 3.1: Eliminación hacia adelante (Vectores temporales l, mu, z)
+        self.l = [1.0] * (self.n + 1)
+        self.mu = [0.0] * (self.n + 1)
+        self.z = [0.0] * (self.n + 1)
+        
+        for i in range(1, self.n):
+            self.l[i] = 2.0 * (self.x[i+1] - self.x[i-1]) - self.h[i-1] * self.mu[i-1]
+            self.mu[i] = self.h[i] / self.l[i]
+            self.z[i] = (self.alfa[i] - self.h[i-1] * self.z[i-1]) / self.l[i]
+            
+        # Parte 3.2: Sustitución hacia atrás (Despejando coeficientes finales c, b, d)
+        self.c = [0.0] * (self.n + 1)
+        self.b = [0.0] * self.n
+        self.d = [0.0] * self.n
+        
+        j = self.n - 1
+        while j >= 0:
+            self.c[j] = self.z[j] - self.mu[j] * self.c[j+1]
+            self.b[j] = (self.a[j+1] - self.a[j]) / self.h[j] - self.h[j] * (self.c[j+1] + 2.0 * self.c[j]) / 3.0
+            self.d[j] = (self.c[j+1] - self.c[j]) / (3.0 * self.h[j])
+            j = j - 1
+
+    def evaluar(self, t):
+        # --- FASE 4: La lógica de Evaluación ---
+        indice = 0
+        encontrado = False
+        
+        # Filtro lógico para encontrar el tramo correcto sin instrucción de ruptura
+        for i in range(self.n):
+            if not encontrado:
+                if t >= self.x[i] and t <= self.x[i+1]:
+                    indice = i
+                    encontrado = True
+                    
+        # Control de límites: si el punto está fuera, se asigna al tramo más cercano
+        if not encontrado:
+            if t < self.x[0]:
+                indice = 0
+            else:
+                indice = self.n - 1
+                
+        # Evaluación en el polinomio cúbico del tramo hallado
+        dx = t - self.x[indice]
+        resultado = self.a[indice] + self.b[indice] * dx + self.c[indice] * (dx ** 2) + self.d[indice] * (dx ** 3)
+        return resultado
+
+    def graficar(self):
+        x_min = min(self.x)
+        x_max = max(self.x)
+        margen = (x_max - x_min) * 0.1
+        
+        t_vector = []
+        y_vector = []
+        
+        pasos = 100
+        paso_t = (x_max + margen - (x_min - margen)) / pasos
+        
+        t_actual = x_min - margen
+        for i in range(pasos + 1):
+            t_vector.append(t_actual)
+            y_vector.append(self.evaluar(t_actual))
+            t_actual = t_actual + paso_t
+            
+        plt.figure(figsize=(8, 5))
+        plt.plot(t_vector, y_vector, 'm-', label="Spline Cúbica")
+        plt.plot(self.x, self.y, 'ro', markersize=8, label="Nodos")
+        plt.title("Interpolación por Splines Cúbicas")
+        plt.grid(True)
+        plt.legend()
+        plt.show()
