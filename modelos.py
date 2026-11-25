@@ -835,18 +835,17 @@ class InterpolacionSplineCubica:
         self.y = y_datos
         self.n = len(x_datos) - 1
         
-        # --- FASE 1: Preparación geométrica ---
-        # Vector a: La curva pasa exactamente por los puntos experimentales Y
+        #Vector a: La curva pasa exactamente por los puntos experimentales Y
         self.a = []
         for i in range(self.n + 1):
             self.a.append(self.y[i])
             
-        # Vector h: El ancho físico de cada tramo (distancia entre puntos X)
+        #Vector h: El ancho físico de cada tramo (distancia entre puntos X)
         self.h = []
         for i in range(self.n):
             self.h.append(self.x[i+1] - self.x[i])
             
-        # --- FASE 2: Construcción del sistema matricial ---
+        #Construcción del sistema matricial
         # Vector alfa: Vector de términos independientes del sistema de derivadas
         self.alfa = [0.0] * (self.n + 1)
         for i in range(1, self.n):
@@ -854,8 +853,7 @@ class InterpolacionSplineCubica:
             termino2 = (3.0 / self.h[i-1]) * (self.a[i] - self.a[i-1])
             self.alfa[i] = termino1 - termino2
             
-        # --- FASE 3: Resolviendo la matriz (Algoritmo de Thomas) ---
-        
+        #Resolviendo la matriz (Algoritmo de Thomas)
         # Parte 3.1: Eliminación hacia adelante (Vectores temporales l, mu, z)
         self.l = [1.0] * (self.n + 1)
         self.mu = [0.0] * (self.n + 1)
@@ -879,18 +877,18 @@ class InterpolacionSplineCubica:
             j = j - 1
 
     def evaluar(self, t):
-        # --- FASE 4: La lógica de Evaluación ---
+        #La lógica de Evaluación
         indice = 0
         encontrado = False
         
-        # Filtro lógico para encontrar el tramo correcto sin instrucción de ruptura
+        #Filtro lógico para encontrar el tramo correcto sin instrucción de ruptura
         for i in range(self.n):
             if not encontrado:
                 if t >= self.x[i] and t <= self.x[i+1]:
                     indice = i
                     encontrado = True
                     
-        # Control de límites: si el punto está fuera, se asigna al tramo más cercano
+        #si el punto está fuera, se asigna al tramo más cercano
         if not encontrado:
             if t < self.x[0]:
                 indice = 0
